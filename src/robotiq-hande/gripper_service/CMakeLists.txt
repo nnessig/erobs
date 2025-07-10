@@ -11,6 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(pdf_beamtime_interfaces REQUIRED)
 find_package(robotiq_driver REQUIRED)
+find_package(serial REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -20,17 +21,19 @@ set(dependencies
   rclcpp_components
   pdf_beamtime_interfaces
   robotiq_driver
+  serial
 )
 
-include_directories(include)  # This makes sure the libraries are visible
-
 add_executable(gripper_service src/gripper_service.cpp)
+target_include_directories(gripper_service PUBLIC include)
 ament_target_dependencies(gripper_service ${dependencies})
 
 add_executable(gripper_close src/gripper_close.cpp)
+target_include_directories(gripper_close PUBLIC include)
 ament_target_dependencies(gripper_close ${dependencies})
 
 add_executable(gripper_open src/gripper_open.cpp)
+target_include_directories(gripper_open PUBLIC include)
 ament_target_dependencies(gripper_open ${dependencies})
 
 install(TARGETS
@@ -62,3 +65,4 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
+
