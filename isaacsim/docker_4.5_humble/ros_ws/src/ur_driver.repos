@@ -1,0 +1,9 @@
+repositories:
+  ur_controllers:
+    type: git
+    url: git@github.com:UniversalRobots/Universal_Robots_ROS2_Controllers.git
+    version: humble
+  ur_msgs:
+    type: git
+    url: git@github.com:UniversalRobots/Universal_Robots_ExternalControl_msgs.git
+    version: humble
