@@ -26,6 +26,8 @@ docker run --rm -it \
   -v $BASE/cache/pip:/home/developer/.cache/pip:rw \
   -v $BASE/data/ov:/home/developer/.local/share/ov:rw \
   -v ${USD_DIR}:/workspace/erobs:rw \
+  -v ${USD_DIR}/scripts:/workspace/scripts:rw \
+  -v ~/ros_ws:/home/developer/ros_ws:rw \
   isaac-sim:4.5-humble_ros_ws \
   /isaac-sim/isaac-sim.sh /workspace/erobs/$USD_FILE \
   --/rtx/post/dlss/enabled=false
