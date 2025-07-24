@@ -10,9 +10,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY img_dump/apt_manual.txt /tmp/apt_manual.txt
 
 # Base system + ROS sources
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    vulkan-tools libvulkan1 mesa-vulkan-drivers lsb-release curl \
-    && curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --allow-downgrades libbrotli1=1.0.9-2build6 && \
+    apt-mark hold libbrotli1 && \
+    apt-get install -y --no-install-recommends \
+        vulkan-tools libvulkan1 mesa-vulkan-drivers lsb-release curl && \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
       -o /usr/share/keyrings/ros-archive-keyring.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
       http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" \
@@ -31,6 +34,20 @@ RUN apt-get update && \
     ros-humble-controller-manager ros-humble-controller-manager-msgs \
     ros-humble-hardware-interface ros-humble-transmission-interface \
     ros-humble-forward-command-controller ros-humble-joint-state-broadcaster \
+    ros-humble-moveit \
+    ros-humble-moveit-ros-move-group \
+    ros-humble-moveit-ros-visualization \
+    ros-humble-moveit-ros-planning \
+    ros-humble-moveit-planners-ompl \
+    ros-humble-moveit-servo \
+    ros-humble-moveit-simple-controller-manager \
+    ros-humble-rviz2 \
+    ros-humble-robot-state-publisher \
+    ros-humble-joint-state-publisher \
+    ros-humble-joint-state-publisher-gui \
+    ros-humble-tf2-tools ros-humble-tf2-ros ros-humble-tf2-msgs ros-humble-tf2-eigen \
+    ros-humble-xacro \
+    libfreetype6-dev \
     libgl1-mesa-glx libglx0 libglvnd0 libgl1 libegl1 \
     nvidia-cuda-toolkit nvidia-cuda-dev nvidia-opencl-dev \
     git unzip zip wget bash-completion nano vim sudo locales \
@@ -57,14 +74,16 @@ RUN id -u developer >/dev/null 2>&1 || useradd -m -s /bin/bash developer && \
 COPY nvidia_glx_patch.tar.gz /tmp/
 RUN tar -xzvf /tmp/nvidia_glx_patch.tar.gz -C / && ldconfig
 
-# ---------- Set up workspace with UR driver ----------
+# ---------- Set up workspace with UR driver manually ----------
 USER developer
 WORKDIR /workspace
 
-RUN mkdir -p /workspace/ros_ws/src
-
-# Use PickNik's complete and working monorepo for all UR packages
-RUN git clone -b humble-devel https://github.com/PickNikRobotics/universal_robot.git /workspace/ros_ws/src/universal_robot || true
+RUN mkdir -p /workspace/ros_ws/src && \
+    cd /workspace/ros_ws/src && \
+    git clone -b humble https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git && \
+    git clone -b humble https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git && \
+    git clone -b humble https://github.com/ros-industrial/ur_msgs.git && \
+    git clone -b master https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
 
 # Resolve dependencies
 USER root
@@ -78,7 +97,8 @@ RUN export ROS_DISTRO=humble && \
         moveit_kinematics moveit_planners_ompl moveit_ros_move_group \
         moveit_ros_visualization moveit_servo moveit_simple_controller_manager \
         warehouse_ros_sqlite \
-        ur_client_library ur_msgs joint_state_publisher_gui liburdfdom-tools" \
+        ur_client_library ur_msgs ur_description \
+        joint_state_publisher_gui liburdfdom-tools" \
         -r -y
 
 # Build it using bash for 'source' support
@@ -119,4 +139,5 @@ ENV ACCEPT_EULA=Y \
     LD_LIBRARY_PATH=/isaac-sim/kit:$LD_LIBRARY_PATH
 
 ENTRYPOINT ["/usr/local/bin/ros_entrypoint.sh"]
-CMD ["/isaac-sim/isaac-sim.sh"] 
+CMD ["/isaac-sim/isaac-sim.sh"]
+
