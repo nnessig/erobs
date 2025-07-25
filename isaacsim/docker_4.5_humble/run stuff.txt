@@ -1,7 +1,7 @@
 xhost +local:docker
 BASE="$HOME/docker/isaac-sim"
 USD_DIR="/home/wfernando1/Documents/erobs/isaacsim"
-USD_FILE="erobs-isaacsim.usd"   # change if needed
+USD_FILE="erobs-isaacsim.usd"
 
 docker run --rm -it \
   --gpus all \
@@ -10,7 +10,6 @@ docker run --rm -it \
   --security-opt seccomp=unconfined \
   --security-opt apparmor=unconfined \
   --tmpfs /dev/shm:rw,nosuid,nodev,exec,size=2g \
-  --user $(id -u):$(id -g) \
   -e DISPLAY=$DISPLAY \
   -e QT_X11_NO_MITSHM=1 \
   -e __GLX_VENDOR_LIBRARY_NAME=nvidia \
@@ -27,11 +26,10 @@ docker run --rm -it \
   -v $BASE/data/ov:/home/developer/.local/share/ov:rw \
   -v ${USD_DIR}:/workspace/erobs:rw \
   -v ${USD_DIR}/scripts:/workspace/scripts:rw \
-  -v ~/ros_ws:/home/developer/ros_ws:rw \
-  -v /home/wfernando1/Documents/erobs:/workspace/ros_ws/src/erobs:rw \
   isaac-sim:4.5-humble_ros_ws_fullybuilt \
   /isaac-sim/isaac-sim.sh /workspace/erobs/$USD_FILE \
   --/rtx/post/dlss/enabled=false
+
 
 
 
@@ -85,6 +83,25 @@ docker run -it \
 
 cd /isaac-sim
 ./isaac-sim.sh
+
+docker exec -it <container_name> bash
+
+cd /workspace/ros_ws
+rm -rf build install log
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install
+
+source /opt/ros/humble/setup.bash
+source /workspace/ros_ws/install/setup.bash
+
+xacro $(ros2 pkg prefix ur_description)/share/ur_description/urdf/ur3e_robot.urdf.xacro \
+  prefix:="" \
+  name:=ur3e \
+  > /tmp/ur3e.urdf
+
+ros2 run robot_state_publisher robot_state_publisher /tmp/ur3e.urdf
+
+
 
 docker exec -u root -it <container_name> bash
 

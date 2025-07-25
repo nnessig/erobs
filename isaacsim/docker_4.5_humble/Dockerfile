@@ -28,10 +28,12 @@ RUN apt-get update && \
     build-essential python3-colcon-common-extensions python3-rosdep python3-argcomplete \
     ros-humble-ros-base ros-humble-vision-msgs ros-humble-angles \
     ros-humble-controller-interface ros-humble-joint-trajectory-controller \
-    ros-humble-ament-cmake ros-humble-rclpy ros-humble-rcl ros-humble-rcpputils \
+    ros-humble-controller-manager ros-humble-controller-manager-msgs \
+    ros-humble-ros2-control-test-assets \
+    ros-humble-ament-cmake ros-humble-ament-cmake-gmock ros-humble-ament-cmake-google-benchmark \
+    ros-humble-rclpy ros-humble-rcl ros-humble-rcpputils \
     ros-humble-rmw-fastrtps-cpp ros-humble-rmw-fastrtps-shared-cpp ros-humble-rosidl-runtime-cpp \
     ros-humble-ros2-control ros-humble-ros2-controllers \
-    ros-humble-controller-manager ros-humble-controller-manager-msgs \
     ros-humble-hardware-interface ros-humble-transmission-interface \
     ros-humble-forward-command-controller ros-humble-joint-state-broadcaster \
     ros-humble-moveit \
@@ -85,6 +87,18 @@ RUN mkdir -p /workspace/ros_ws/src && \
     git clone -b humble https://github.com/ros-industrial/ur_msgs.git && \
     git clone -b master https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
 
+# Patch ur_controllers: add missing find_package and depends
+RUN sed -i '/find_package(controller_interface REQUIRED)/a find_package(controller_manager REQUIRED)\nfind_package(ros2_control_test_assets REQUIRED)' \
+        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/CMakeLists.txt && \
+    sed -i '/set(THIS_PACKAGE_INCLUDE_DEPENDS/a \  controller_manager\n  ros2_control_test_assets' \
+        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/CMakeLists.txt && \
+    sed -i '/<depend>controller_interface<\/depend>/a <depend>controller_manager</depend>\n<depend>ros2_control_test_assets</depend>' \
+        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/package.xml && \
+    sed -i '/<test_depend>controller_manager<\/test_depend>/d' \
+        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/package.xml && \
+    sed -i '/<test_depend>ros2_control_test_assets<\/test_depend>/d' \
+        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/package.xml
+
 # Resolve dependencies
 USER root
 RUN export ROS_DISTRO=humble && \
@@ -101,9 +115,15 @@ RUN export ROS_DISTRO=humble && \
         joint_state_publisher_gui liburdfdom-tools" \
         -r -y
 
-# Build it using bash for 'source' support
+# Build ROS 2 workspace
 USER developer
-RUN bash -c "cd /workspace/ros_ws && source /opt/ros/humble/setup.bash && colcon build --symlink-install"
+RUN bash -c "set -e && \
+    source /opt/ros/humble/setup.bash && \
+    cd /workspace/ros_ws && \
+    colcon build --symlink-install --cmake-args -DBUILD_TESTING=OFF"
+
+# Link it so ~/ros_ws/install/setup.bash exists
+RUN ln -s /workspace/ros_ws /home/developer/ros_ws
 
 # ---------- Patch Isaac Sim extensions ----------
 USER root
