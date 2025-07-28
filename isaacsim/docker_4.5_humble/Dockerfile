@@ -23,46 +23,64 @@ RUN apt-get update && \
 
 # ROS and dev tools
 RUN apt-get update && \
-    sed -e 's/#.*//' -e '/^\s*$/d' /tmp/apt_manual.txt | xargs -r apt-get install -y --no-install-recommends && \
+    sed -e 's/#.*//' -e '/^\s*$/d' /tmp/apt_manual.txt | \
+      xargs -r apt-get install -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
-    build-essential python3-colcon-common-extensions python3-rosdep python3-argcomplete \
-    ros-humble-ros-base ros-humble-vision-msgs ros-humble-angles \
-    ros-humble-controller-interface ros-humble-joint-trajectory-controller \
-    ros-humble-controller-manager ros-humble-controller-manager-msgs \
-    ros-humble-ros2-control-test-assets \
-    ros-humble-ament-cmake ros-humble-ament-cmake-gmock ros-humble-ament-cmake-google-benchmark \
-    ros-humble-rclpy ros-humble-rcl ros-humble-rcpputils \
-    ros-humble-rmw-fastrtps-cpp ros-humble-rmw-fastrtps-shared-cpp ros-humble-rosidl-runtime-cpp \
-    ros-humble-ros2-control ros-humble-ros2-controllers \
-    ros-humble-hardware-interface ros-humble-transmission-interface \
-    ros-humble-forward-command-controller ros-humble-joint-state-broadcaster \
-    ros-humble-moveit \
-    ros-humble-moveit-ros-move-group \
-    ros-humble-moveit-ros-visualization \
-    ros-humble-moveit-ros-planning \
-    ros-humble-moveit-planners-ompl \
-    ros-humble-moveit-servo \
-    ros-humble-moveit-simple-controller-manager \
-    ros-humble-moveit-setup-assistant \
-    ros-humble-moveit-setup-framework \
-    ros-humble-moveit-setup-app-plugins \
-    ros-humble-moveit-setup-core-plugins \
-    ros-humble-moveit-setup-srdf-plugins \
-    ros-humble-moveit-setup-controllers \
-    qtbase5-dev qtbase5-dev-tools qttools5-dev qttools5-dev-tools \
-    ros-humble-rviz2 \
-    ros-humble-robot-state-publisher \
-    ros-humble-joint-state-publisher \
-    ros-humble-joint-state-publisher-gui \
-    ros-humble-tf2-tools ros-humble-tf2-ros ros-humble-tf2-msgs ros-humble-tf2-eigen \
-    ros-humble-xacro \
-    libfreetype6-dev \
-    libgl1-mesa-glx libglx0 libglvnd0 libgl1 libegl1 \
-    nvidia-cuda-toolkit nvidia-cuda-dev nvidia-opencl-dev \
-    git unzip zip wget bash-completion nano vim sudo locales \
-    libglvnd-dev libx11-6 libxext6 socat \
-    libbackward-cpp-dev && \
-    ln -sf /opt/ros/humble/lib/moveit_setup_assistant/moveit_setup_assistant /opt/ros/humble/bin/moveit_setup_assistant && \
+        build-essential python3-colcon-common-extensions python3-rosdep python3-argcomplete \
+        python3-ament-package python3-empy \
+        ros-humble-ros-base ros-humble-vision-msgs ros-humble-angles \
+        ros-humble-controller-interface ros-humble-joint-trajectory-controller \
+        ros-humble-controller-manager ros-humble-controller-manager-msgs \
+        ros-humble-ros2-control ros-humble-ros2-controllers \
+        ros-humble-ros2-control-test-assets \
+        ros-humble-pluginlib \
+        ros-humble-rcutils \
+        ros-humble-realtime-tools \
+        ros-humble-generate-parameter-library \
+        ros-humble-lifecycle-msgs \
+        ros-humble-trajectory-msgs \
+        ros-humble-control-msgs \
+        ros-humble-action-msgs \
+        ros-humble-ament-cmake ros-humble-ament-cmake-gmock ros-humble-ament-cmake-google-benchmark \
+        ros-humble-rclpy ros-humble-rcl ros-humble-rcpputils \
+        ros-humble-rmw-fastrtps-cpp ros-humble-rmw-fastrtps-shared-cpp ros-humble-rosidl-runtime-cpp \
+        ros-humble-hardware-interface ros-humble-transmission-interface \
+        ros-humble-forward-command-controller ros-humble-joint-state-broadcaster \
+        ros-humble-moveit \
+        ros-humble-moveit-ros-move-group \
+        ros-humble-moveit-ros-visualization \
+        ros-humble-moveit-ros-planning \
+        ros-humble-moveit-planners-ompl \
+        ros-humble-moveit-servo \
+        ros-humble-moveit-simple-controller-manager \
+        ros-humble-moveit-setup-assistant \
+        ros-humble-moveit-setup-framework \
+        ros-humble-moveit-setup-app-plugins \
+        ros-humble-moveit-setup-core-plugins \
+        ros-humble-moveit-setup-srdf-plugins \
+        ros-humble-moveit-setup-controllers \
+        qtbase5-dev qtbase5-dev-tools qttools5-dev qttools5-dev-tools \
+        ros-humble-rviz2 \
+        ros-humble-robot-state-publisher \
+        ros-humble-joint-state-publisher \
+        ros-humble-joint-state-publisher-gui \
+        ros-humble-tf2-tools ros-humble-tf2-ros ros-humble-tf2-msgs ros-humble-tf2-eigen \
+        ros-humble-xacro \
+        libfreetype6-dev \
+        libgl1-mesa-glx libegl1 libglx0 libglvnd0 \
+        libogre1.12.10 libogre-1.12-dev \
+        libfreeimage3 libglew2.2 \
+        mesa-utils \
+        x11-utils \
+        libnvidia-gl-565-server \
+        libnvidia-common-565-server \
+        libnvidia-egl-wayland1 \
+        nvidia-cuda-toolkit nvidia-cuda-dev nvidia-opencl-dev \
+        git unzip zip wget bash-completion nano vim sudo locales \
+        libglvnd-dev libx11-6 libxext6 socat \
+        libbackward-cpp-dev && \
+    ln -sf /opt/ros/humble/lib/moveit_setup_assistant/moveit_setup_assistant \
+           /opt/ros/humble/bin/moveit_setup_assistant && \
     rm -rf /var/lib/apt/lists/*
 
 # Init rosdep with proper permissions and defaults

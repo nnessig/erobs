@@ -1,33 +1,43 @@
-xhost +local:docker
 BASE="$HOME/docker/isaac-sim"
 USD_DIR="/home/wfernando1/Documents/erobs/isaacsim"
+ROS_WS="/home/wfernando1/Documents/erobs/isaacsim/docker_4.5_humble/ros_ws"
 USD_FILE="erobs-isaacsim.usd"
 
+xhost +local:docker
 docker run --rm -it \
+  --runtime=nvidia \
   --gpus all \
+  --device /dev/dri:/dev/dri \
+  --group-add 44 \
+  --group-add 110 \
+  --device-cgroup-rule='c 226:* rmw' \
   --network host \
   --cap-add SYS_ADMIN \
   --security-opt seccomp=unconfined \
   --security-opt apparmor=unconfined \
   --tmpfs /dev/shm:rw,nosuid,nodev,exec,size=2g \
-  -e DISPLAY=$DISPLAY \
+  -e DISPLAY="$DISPLAY" \
   -e QT_X11_NO_MITSHM=1 \
-  -e __GLX_VENDOR_LIBRARY_NAME=nvidia \
   -e XDG_RUNTIME_DIR=/tmp/runtime-developer \
+  -e NVIDIA_VISIBLE_DEVICES=all \
+  -e NVIDIA_DRIVER_CAPABILITIES=all \
+  -e __NV_PRIME_RENDER_OFFLOAD=1 \
+  -e __GLX_VENDOR_LIBRARY_NAME=nvidia \
+  -e LIBGL_DRI3_DISABLE=1 \
   -e ACCEPT_EULA=Y \
   -e PRIVACY_CONSENT=Y \
-  -e NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics,display \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
   -v /tmp/runtime-developer:/tmp/runtime-developer:rw \
-  -v $BASE/cache/kit:/isaac-sim/kit/cache:rw \
-  -v $BASE/cache/ov:/home/developer/.cache/ov:rw \
-  -v $BASE/cache/warp:/home/developer/.cache/warp:rw \
-  -v $BASE/cache/pip:/home/developer/.cache/pip:rw \
-  -v $BASE/data/ov:/home/developer/.local/share/ov:rw \
-  -v ${USD_DIR}:/workspace/erobs:rw \
-  -v ${USD_DIR}/scripts:/workspace/scripts:rw \
+  -v "$BASE/cache/kit":/isaac-sim/kit/cache:rw \
+  -v "$BASE/cache/ov":/home/developer/.cache/ov:rw \
+  -v "$BASE/cache/warp":/home/developer/.cache/warp:rw \
+  -v "$BASE/cache/pip":/home/developer/.cache/pip:rw \
+  -v "$BASE/data/ov":/home/developer/.local/share/ov:rw \
+  -v "$USD_DIR":/workspace/erobs:rw \
+  -v "$USD_DIR/scripts":/workspace/scripts:rw \
+  -v "$ROS_WS":/workspace/ros_ws:rw \
   isaac-sim:4.5-humble_ros_ws_fullybuilt \
-  /isaac-sim/isaac-sim.sh /workspace/erobs/$USD_FILE \
+  /isaac-sim/isaac-sim.sh /workspace/erobs/"$USD_FILE" \
   --/rtx/post/dlss/enabled=false
 
 
@@ -51,43 +61,20 @@ docker run --rm -it \
 
 
 
-xhost +local:docker
+Launching Rviz2:
+docker exec -it $(docker ps -q -f ancestor=isaac-sim:4.5-humble_ros_ws_fullybuilt) bash
+glxinfo -B | grep -E "OpenGL (vendor|renderer)"   # should show NVIDIA
+source /opt/ros/humble/setup.bash
+source /home/developer/ros_ws/install/setup.bash
+ros2 launch ur3e_bringup ur3e_rviz.launch.py
 
-docker run -it \
-  --gpus all \
-  --network host \
-  --cap-add SYS_ADMIN \
-  --security-opt seccomp=unconfined \
-  --security-opt apparmor=unconfined \
-  -e DISPLAY=$DISPLAY \
-  -e QT_X11_NO_MITSHM=1 \
-  -e __GLX_VENDOR_LIBRARY_NAME=nvidia \
-  -e ACCEPT_EULA=Y \
-  -e PRIVACY_CONSENT=Y \
-  -e NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics,display \
-  -e XDG_RUNTIME_DIR=/tmp/runtime-developer \
-  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-  -v /tmp/runtime-developer:/tmp/runtime-developer:rw \
-  -v ~/docker/isaac-sim/cache/kit:/isaac-sim/kit/cache:rw \
-  -v ~/docker/isaac-sim/cache/ov:/home/developer/.cache/ov:rw \
-  -v ~/docker/isaac-sim/cache/pip:/home/developer/.cache/pip:rw \
-  -v ~/docker/isaac-sim/cache/glcache:/home/developer/.cache/nvidia/GLCache:rw \
-  -v ~/docker/isaac-sim/cache/computecache:/home/developer/.nv/ComputeCache:rw \
-  -v ~/docker/isaac-sim/cache/warp:/home/developer/.cache/warp:rw \
-  -v ~/docker/isaac-sim/logs:/home/developer/.nvidia-omniverse/logs:rw \
-  -v ~/docker/isaac-sim/data:/home/developer/.local/share/ov/data:rw \
-  -v ~/Documents/erobs/isaacsim:/workspace/isaacsim:rw \
-  -v ~/Documents/erobs/ros_ws:/workspace/ros_ws:rw \
-  -v ~/Documents/erobs/assets:/workspace/assets:ro \
-  isaac-sim:4.5-humble_ros_ws_rebuild
-
-cd /isaac-sim
-./isaac-sim.sh
-
+Building Docker Image:
 docker build -t isaac-sim:4.5-humble_ros_ws_fullybuilt .
 
+Docker Image Developer Mode:
 docker exec -it <container_name> bash
 
+-------
 cd /workspace/ros_ws
 rm -rf build install log
 source /opt/ros/humble/setup.bash
