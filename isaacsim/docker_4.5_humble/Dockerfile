@@ -43,6 +43,13 @@ RUN apt-get update && \
     ros-humble-moveit-planners-ompl \
     ros-humble-moveit-servo \
     ros-humble-moveit-simple-controller-manager \
+    ros-humble-moveit-setup-assistant \
+    ros-humble-moveit-setup-framework \
+    ros-humble-moveit-setup-app-plugins \
+    ros-humble-moveit-setup-core-plugins \
+    ros-humble-moveit-setup-srdf-plugins \
+    ros-humble-moveit-setup-controllers \
+    qtbase5-dev qtbase5-dev-tools qttools5-dev qttools5-dev-tools \
     ros-humble-rviz2 \
     ros-humble-robot-state-publisher \
     ros-humble-joint-state-publisher \
@@ -53,7 +60,9 @@ RUN apt-get update && \
     libgl1-mesa-glx libglx0 libglvnd0 libgl1 libegl1 \
     nvidia-cuda-toolkit nvidia-cuda-dev nvidia-opencl-dev \
     git unzip zip wget bash-completion nano vim sudo locales \
-    libglvnd-dev libx11-6 libxext6 socat && \
+    libglvnd-dev libx11-6 libxext6 socat \
+    libbackward-cpp-dev && \
+    ln -sf /opt/ros/humble/lib/moveit_setup_assistant/moveit_setup_assistant /opt/ros/humble/bin/moveit_setup_assistant && \
     rm -rf /var/lib/apt/lists/*
 
 # Init rosdep with proper permissions and defaults
@@ -156,7 +165,8 @@ ENV ACCEPT_EULA=Y \
     KIT_CACHE_DIR=/home/developer/.cache/ov \
     KIT_CONFIG_DIR=/home/developer/.config/ov \
     KIT_USER_DIR=/home/developer/.nvidia-omniverse \
-    LD_LIBRARY_PATH=/isaac-sim/kit:$LD_LIBRARY_PATH
+    LD_LIBRARY_PATH=/isaac-sim/kit:$LD_LIBRARY_PATH \
+    PATH="/opt/ros/humble/bin:${PATH}"
 
 ENTRYPOINT ["/usr/local/bin/ros_entrypoint.sh"]
 CMD ["/isaac-sim/isaac-sim.sh"]

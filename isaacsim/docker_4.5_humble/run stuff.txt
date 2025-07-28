@@ -84,6 +84,8 @@ docker run -it \
 cd /isaac-sim
 ./isaac-sim.sh
 
+docker build -t isaac-sim:4.5-humble_ros_ws_fullybuilt .
+
 docker exec -it <container_name> bash
 
 cd /workspace/ros_ws
