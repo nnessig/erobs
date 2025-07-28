@@ -35,7 +35,6 @@ docker run --rm -it \
   -v "$BASE/data/ov":/home/developer/.local/share/ov:rw \
   -v "$USD_DIR":/workspace/erobs:rw \
   -v "$USD_DIR/scripts":/workspace/scripts:rw \
-  -v "$ROS_WS":/workspace/ros_ws:rw \
   isaac-sim:4.5-humble_ros_ws_fullybuilt \
   /isaac-sim/isaac-sim.sh /workspace/erobs/"$USD_FILE" \
   --/rtx/post/dlss/enabled=false
@@ -63,10 +62,10 @@ docker run --rm -it \
 
 Launching Rviz2:
 docker exec -it $(docker ps -q -f ancestor=isaac-sim:4.5-humble_ros_ws_fullybuilt) bash
-glxinfo -B | grep -E "OpenGL (vendor|renderer)"   # should show NVIDIA
+
 source /opt/ros/humble/setup.bash
 source /home/developer/ros_ws/install/setup.bash
-ros2 launch ur3e_bringup ur3e_rviz.launch.py
+ros2 launch ur3e_bringup rviz_ur3e.launch.py
 
 Building Docker Image:
 docker build -t isaac-sim:4.5-humble_ros_ws_fullybuilt .

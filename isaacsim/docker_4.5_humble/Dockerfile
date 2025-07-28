@@ -126,6 +126,12 @@ RUN sed -i '/find_package(controller_interface REQUIRED)/a find_package(controll
     sed -i '/<test_depend>ros2_control_test_assets<\/test_depend>/d' \
         /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/package.xml
 
+# Flatten the ROS2 driver so colcon can see ur_controllers (and all its siblings)
+USER developer
+RUN cd /workspace/ros_ws/src && \
+    mv Universal_Robots_ROS2_Driver/* . && \
+    rm -rf Universal_Robots_ROS2_Driver
+
 # Resolve dependencies
 USER root
 RUN export ROS_DISTRO=humble && \
@@ -188,4 +194,3 @@ ENV ACCEPT_EULA=Y \
 
 ENTRYPOINT ["/usr/local/bin/ros_entrypoint.sh"]
 CMD ["/isaac-sim/isaac-sim.sh"]
-
