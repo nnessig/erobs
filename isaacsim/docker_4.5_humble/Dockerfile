@@ -33,6 +33,10 @@ RUN apt-get update && \
         ros-humble-controller-manager ros-humble-controller-manager-msgs \
         ros-humble-ros2-control ros-humble-ros2-controllers \
         ros-humble-ros2-control-test-assets \
+        ros-humble-ros2-controllers-test-nodes \
+        ros-humble-hardware-interface-testing \
+        ros-humble-warehouse-ros-sqlite \
+        liburdfdom-tools \
         ros-humble-pluginlib \
         ros-humble-rcutils \
         ros-humble-realtime-tools \
@@ -103,57 +107,55 @@ RUN id -u developer >/dev/null 2>&1 || useradd -m -s /bin/bash developer && \
 COPY nvidia_glx_patch.tar.gz /tmp/
 RUN tar -xzvf /tmp/nvidia_glx_patch.tar.gz -C / && ldconfig
 
-# ---------- Set up workspace with UR driver manually ----------
+# ---------- Set up ROS2 workspace with UR packages ----------
 USER developer
-WORKDIR /workspace
+WORKDIR /workspace/ros_ws/src
 
-RUN mkdir -p /workspace/ros_ws/src && \
-    cd /workspace/ros_ws/src && \
+# clone UR msgs + driver, description & client repos
+RUN git clone -b humble https://github.com/ros-industrial/ur_msgs.git && \
     git clone -b humble https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git && \
     git clone -b humble https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git && \
-    git clone -b humble https://github.com/ros-industrial/ur_msgs.git && \
     git clone -b master https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
 
-# Patch ur_controllers: add missing find_package and depends
-RUN sed -i '/find_package(controller_interface REQUIRED)/a find_package(controller_manager REQUIRED)\nfind_package(ros2_control_test_assets REQUIRED)' \
-        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/CMakeLists.txt && \
-    sed -i '/set(THIS_PACKAGE_INCLUDE_DEPENDS/a \  controller_manager\n  ros2_control_test_assets' \
-        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/CMakeLists.txt && \
-    sed -i '/<depend>controller_interface<\/depend>/a <depend>controller_manager</depend>\n<depend>ros2_control_test_assets</depend>' \
-        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/package.xml && \
-    sed -i '/<test_depend>controller_manager<\/test_depend>/d' \
-        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/package.xml && \
-    sed -i '/<test_depend>ros2_control_test_assets<\/test_depend>/d' \
-        /workspace/ros_ws/src/Universal_Robots_ROS2_Driver/ur_controllers/package.xml
+# patch ur_controllers to pull in controller_manager & test_assets
+RUN sed -i '/find_package(controller_interface REQUIRED)/a \
+    find_package(controller_manager REQUIRED)\n\
+    find_package(ros2_control_test_assets REQUIRED)' \
+        Universal_Robots_ROS2_Driver/ur_controllers/CMakeLists.txt && \
+    sed -i '/set(THIS_PACKAGE_INCLUDE_DEPENDS/a \
+    controller_manager\n    ros2_control_test_assets' \
+        Universal_Robots_ROS2_Driver/ur_controllers/CMakeLists.txt && \
+    sed -i '/<depend>controller_interface<\/depend>/a \
+    <depend>controller_manager</depend>\n\
+    <depend>ros2_control_test_assets</depend>' \
+        Universal_Robots_ROS2_Driver/ur_controllers/package.xml
 
-# Flatten the ROS2 driver so colcon can see ur_controllers (and all its siblings)
-USER developer
-RUN cd /workspace/ros_ws/src && \
-    mv Universal_Robots_ROS2_Driver/* . && \
-    rm -rf Universal_Robots_ROS2_Driver
+# flatten so colcon can see everything (including ur3e_bringup & rviz launch)
+RUN mv Universal_Robots_ROS2_Driver/* . && rm -rf Universal_Robots_ROS2_Driver && \
+    mv Universal_Robots_ROS2_Description/* . && rm -rf Universal_Robots_ROS2_Description
 
-# Resolve dependencies
+# Add local ur3e_bringup with RViz launch file
+COPY ros_ws/src/ur3e_bringup /workspace/ros_ws/src/ur3e_bringup
+
+# install any missing rosdeps
 USER root
 RUN export ROS_DISTRO=humble && \
-    rosdep fix-permissions && rosdep update && \
-    rosdep install --from-paths /workspace/ros_ws/src \
-        --ignore-src \
-        --rosdistro=humble \
-        --skip-keys="joint_state_publisher \
-        ros2_controllers_test_nodes rviz2 xacro hardware_interface_testing \
-        moveit_kinematics moveit_planners_ompl moveit_ros_move_group \
-        moveit_ros_visualization moveit_servo moveit_simple_controller_manager \
-        warehouse_ros_sqlite \
-        ur_client_library ur_msgs ur_description \
-        joint_state_publisher_gui liburdfdom-tools" \
-        -r -y
+    rosdep fix-permissions && \
+    rosdep update && \
+    rosdep install \
+      --from-paths /workspace/ros_ws/src \
+      --ignore-src \
+      -r -y
 
-# Build ROS 2 workspace
+# build the entire overlay
 USER developer
-RUN bash -c "set -e && \
+WORKDIR /workspace/ros_ws
+
+# force bash so that `source setup.bash` works
+RUN /bin/bash -lc "\
     source /opt/ros/humble/setup.bash && \
-    cd /workspace/ros_ws && \
-    colcon build --symlink-install --cmake-args -DBUILD_TESTING=OFF"
+    colcon build --symlink-install --cmake-args -DBUILD_TESTING=OFF\
+"
 
 # Link it so ~/ros_ws/install/setup.bash exists
 RUN ln -s /workspace/ros_ws /home/developer/ros_ws
