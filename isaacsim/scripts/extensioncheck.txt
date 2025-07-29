@@ -1,0 +1,12 @@
+# Copy and paste the following into the Isaac Sim 4.5 Script Editor:
+
+import omni.kit.app
+
+ext_manager = omni.kit.app.get_app().get_extension_manager()
+all_exts = ext_manager.get_extensions()
+
+print("Enabled Extensions:")
+for ext in all_exts:
+    if ext["enabled"]:
+        print(ext["id"])
+

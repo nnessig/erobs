@@ -92,4 +92,3 @@ target/
 #Pixi
 pixi.lock
 isaacsim/docker_4.5_humble/isaac-sim-4.5.0.zip
-isaacsim/docker_4.5_humble/nvidia_glx_patch.tar.gz
