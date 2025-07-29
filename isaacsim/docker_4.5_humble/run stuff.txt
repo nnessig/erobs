@@ -68,10 +68,17 @@ source /home/developer/ros_ws/install/setup.bash
 ros2 launch ur3e_bringup rviz_ur3e.launch.py
 
 Building Docker Image:
+cd ~/Documents/erobs/isaacsim/docker_4.5_humble/ros_ws
 docker build -t isaac-sim:4.5-humble_ros_ws_fullybuilt .
 
 Docker Image Developer Mode:
 docker exec -it <container_name> bash
+
+Sourcing ROS 2:
+source /opt/ros/humble/setup.bash
+cd /workspace/ros_ws
+colcon build --symlink-install
+source install/setup.bash
 
 -------
 cd /workspace/ros_ws
