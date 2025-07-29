@@ -130,7 +130,8 @@ docker run --rm -it \
   -v "$BASE/data/ov":/home/developer/.local/share/ov:rw \
   -v "$USD_DIR":/workspace/erobs:rw \
   -v "$ROS_WS":/workspace/ros_ws:rw \
-  --tmpfs /workspace/erobs/docker_4.5_humble/ros_ws:rw \
+  -v "$USD_DIR/scripts":/workspace/scripts:rw \
+  -v "$USD_DIR/ur3e.urdf":/workspace/ros_ws/install/ur3e.urdf:ro \
   isaac-sim:4.5-humble_ros_ws_fullybuilt \
   bash
 
