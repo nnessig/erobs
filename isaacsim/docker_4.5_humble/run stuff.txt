@@ -135,6 +135,45 @@ docker run --rm -it \
   isaac-sim:4.5-humble_ros_ws_fullybuilt \
   bash
 
+MoveIt Setup Assistant Launch:
+BASE="$HOME/docker/isaac-sim"
+USD_DIR="/home/wfernando1/Documents/erobs/isaacsim"
+ROS_WS="/home/wfernando1/Documents/erobs/isaacsim/docker_4.5_humble/ros_ws"
+
+xhost +local:docker
+
+docker run --rm -it \
+  --runtime=nvidia \
+  --gpus all \
+  --device /dev/dri \
+  --group-add 44 \
+  --group-add 110 \
+  --device-cgroup-rule='c 226:* rmw' \
+  --network host \
+  --cap-add SYS_ADMIN \
+  --security-opt seccomp=unconfined \
+  --security-opt apparmor=unconfined \
+  --tmpfs /dev/shm:rw,nosuid,nodev,exec,size=2g \
+  -e DISPLAY="$DISPLAY" \
+  -e QT_X11_NO_MITSHM=1 \
+  -e XDG_RUNTIME_DIR=/tmp/runtime-developer \
+  -e NVIDIA_VISIBLE_DEVICES=all \
+  -e NVIDIA_DRIVER_CAPABILITIES=all \
+  -e LIBGL_ALWAYS_INDIRECT=1 \
+  -e LIBGL_ALWAYS_SOFTWARE=1 \
+  -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+  -v /tmp/runtime-developer:/tmp/runtime-developer:rw \
+  -v "$USD_DIR":/workspace/erobs:rw \
+  -v "$ROS_WS":/workspace/ros_ws:rw \
+  isaac-sim:4.5-humble_ros_ws_fullybuilt \
+  bash
+  
+export DISPLAY=:1
+export LIBGL_ALWAYS_INDIRECT=1
+export LIBGL_ALWAYS_SOFTWARE=1
+export QT_X11_NO_MITSHM=1
+
+ros2 run moveit_setup_assistant moveit_setup_assistant --urdf_path /workspace/ros_ws/ur3e_with_transmissions.urdf
 
 Simple Container with Image:
 ROS_WS="/home/wfernando1/Documents/erobs/isaacsim/docker_4.5_humble/ros_ws"
