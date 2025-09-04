@@ -36,4 +36,4 @@ docker run --rm -it   --runtime=nvidia --gpus all --device /dev/dri:/dev/dri   -
 ---
 
 ## License
-Distributed under the MIT License. See `LICENSE` for details.
+Distributed under the BSD 3-Clause License. See [LICENSE](../LICENSE) for details.
