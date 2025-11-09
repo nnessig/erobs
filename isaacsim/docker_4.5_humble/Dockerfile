@@ -104,7 +104,7 @@ RUN id -u developer >/dev/null 2>&1 || useradd -m -s /bin/bash developer && \
     echo "developer ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/developer
 
 # NVIDIA patch
-ARG GLX_PATCH_URL=https://github.com/NatTheGnat6/erobs-isaacsim-assets/raw/main/nvidia_glx_patch.tar.gz
+ARG GLX_PATCH_URL=https://github.com/nnessig/erobs-isaacsim-assets/raw/main/nvidia_glx_patch.tar.gz
 RUN wget -O /tmp/nvidia_glx_patch.tar.gz "$GLX_PATCH_URL" \
     && tar -xzvf /tmp/nvidia_glx_patch.tar.gz -C / \
     && ldconfig
